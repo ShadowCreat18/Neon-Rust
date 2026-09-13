@@ -1,41 +1,41 @@
 using UnityEngine;
-using NeonRust.Core;
+using NeonRust.Nucleo;
 
-namespace NeonRust.Weapons
+namespace NeonRust.Armas
 {
-    public class Projectile : MonoBehaviour
+    public class Proyectil : MonoBehaviour
     {
-        public float speed = 10f;
-        public float lifetime = 3f;
+        public float velocidad = 10f;
+        public float tiempoVida = 3f;
         
-        private float damage;
+        private float dano;
         private Rigidbody2D rb;
 
         void Start()
         {
             rb = GetComponent<Rigidbody2D>();
-            Destroy(gameObject, lifetime); // Destruye el proyectil después de un tiempo
+            Destroy(gameObject, tiempoVida); // Destruye el proyectil después de un tiempo
         }
 
         void FixedUpdate()
         {
             // Mueve el proyectil hacia adelante basado en su rotación
-            rb.MovePosition(rb.position + (Vector2)transform.up * speed * Time.fixedDeltaTime);
+            rb.MovePosition(rb.position + (Vector2)transform.up * velocidad * Time.fixedDeltaTime);
         }
 
-        public void SetDamage(float amount)
+        public void EstablecerDano(float cantidad)
         {
-            damage = amount;
+            dano = cantidad;
         }
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
             // Verifica si golpeó una entidad
-            Entity entity = collision.GetComponent<Entity>();
-            if (entity != null)
+            Entidad entidad = collision.GetComponent<Entidad>();
+            if (entidad != null)
             {
                 // Si es un jugador golpeando un enemigo, o viceversa (dependiendo de la configuración de capas)
-                entity.TakeDamage(damage);
+                entidad.RecibirDano(dano);
             }
             
             // Destruye el proyectil al impactar
