@@ -2,29 +2,62 @@ using UnityEngine;
 
 namespace NeonRust.Nucleo
 {
-    // Clase base abstracta que demuestra Programación Orientada a Objetos
-    public abstract class Entidad : MonoBehaviour
+    public class Entidad : MonoBehaviour
     {
-        [Header("Estadísticas de Entidad")]
+        [Header("Estadísticas")]
         public float saludMaxima = 100f;
-        protected float saludActual;
+        public float saludActual;
 
-        protected virtual void Start()
+        private void Start()
         {
             saludActual = saludMaxima;
         }
 
-        // Método polimórfico para recibir daño
-        public virtual void RecibirDano(float cantidad)
+        public void RecibirDano(float cantidad)
         {
             saludActual -= cantidad;
+            Debug.Log(gameObject.name + " recibió " + cantidad + " de daño. Salud restante: " + saludActual);
+
+            // Efecto visual simple de daño (parpadeo rojo temporal)
+            StartCoroutine(EfectoDano());
+
             if (saludActual <= 0)
             {
                 Morir();
             }
         }
 
-        // Método abstracto que obliga a las clases hijas a definir cómo mueren
-        protected abstract void Morir();
+        private System.Collections.IEnumerator EfectoDano()
+        {
+            Renderer[] renderers = GetComponentsInChildren<Renderer>();
+            Color[] coloresOriginales = new Color[renderers.Length];
+
+            // Guardar colores y poner en rojo
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (renderers[i].material.HasProperty("_Color"))
+                {
+                    coloresOriginales[i] = renderers[i].material.color;
+                    renderers[i].material.color = Color.red;
+                }
+            }
+
+            yield return new WaitForSeconds(0.15f);
+
+            // Restaurar colores
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (renderers[i] != null && renderers[i].material.HasProperty("_Color"))
+                {
+                    renderers[i].material.color = coloresOriginales[i];
+                }
+            }
+        }
+
+        protected virtual void Morir()
+        {
+            Debug.Log(gameObject.name + " ha sido destruido.");
+            Destroy(gameObject);
+        }
     }
 }

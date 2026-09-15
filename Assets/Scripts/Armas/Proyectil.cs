@@ -5,40 +5,51 @@ namespace NeonRust.Armas
 {
     public class Proyectil : MonoBehaviour
     {
-        public float velocidad = 10f;
+        public float velocidad = 25f;
         public float tiempoVida = 3f;
-        
         private float dano;
-        private Rigidbody2D rb;
+        private string tagIgnorar;
+
+        private Rigidbody rb;
 
         void Start()
         {
-            rb = GetComponent<Rigidbody2D>();
-            Destroy(gameObject, tiempoVida); // Destruye el proyectil después de un tiempo
+            rb = GetComponent<Rigidbody>();
+            if (rb == null)
+            {
+                rb = gameObject.AddComponent<Rigidbody>();
+            }
+            
+            rb.useGravity = false;
+            // Bloqueamos posición y rotación en Z para que la bala no se desvíe en 3D
+            rb.constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotation;
+
+            Vector3 direccionPlana = new Vector3(transform.forward.x, transform.forward.y, 0).normalized;
+            rb.linearVelocity = direccionPlana * velocidad;
+
+            Destroy(gameObject, tiempoVida);
         }
 
-        void FixedUpdate()
+        public void Configurar(float cantidadDano, string ignorarTag)
         {
-            // Mueve el proyectil hacia adelante basado en su rotación
-            rb.MovePosition(rb.position + (Vector2)transform.up * velocidad * Time.fixedDeltaTime);
+            dano = cantidadDano;
+            tagIgnorar = ignorarTag;
         }
 
-        public void EstablecerDano(float cantidad)
+        private void OnTriggerEnter(Collider other)
         {
-            dano = cantidad;
-        }
+            // Ignorar choques con quien disparó (ej. "Player" o "Enemy")
+            if (other.CompareTag(tagIgnorar)) return;
+            // Ignorar otros proyectiles
+            if (other.GetComponent<Proyectil>() != null) return;
 
-        private void OnTriggerEnter2D(Collider2D collision)
-        {
-            // Verifica si golpeó una entidad
-            Entidad entidad = collision.GetComponent<Entidad>();
+            Entidad entidad = other.GetComponent<Entidad>();
             if (entidad != null)
             {
-                // Si es un jugador golpeando un enemigo, o viceversa (dependiendo de la configuración de capas)
                 entidad.RecibirDano(dano);
             }
             
-            // Destruye el proyectil al impactar
+            // Destruir proyectil al chocar
             Destroy(gameObject);
         }
     }
